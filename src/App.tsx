@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { Download, Settings } from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState({
     logoText: 'منصة المستثمر',
-   
     startupName: 'فوكسو',
     description: 'بناء أنظمة إطالة العمر المخصصة',
     fundingAmount: '0.5 مليون $',
@@ -99,21 +99,27 @@ export default function App() {
 
   const currentTheme = THEMES[data.theme as keyof typeof THEMES] || THEMES.white;
 
-
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
-    const canvas = await html2canvas(cardRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-    });
-    const image = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = `${data.startupName}-factsheet.png`;
-    link.click();
+    try {
+      /* Wait a tiny bit to ensure all SVG/Images are ready */
+      const dataUrl = await toPng(cardRef.current, { 
+        cacheBust: true,
+        pixelRatio: 2.5,
+        backgroundColor: currentTheme.bg,
+        style: {
+          transform: 'scale(1)',
+        }
+      });
+      const link = document.createElement('a');
+      link.download = `${data.startupName}-factsheet.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('oops, something went wrong!', err);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -124,8 +130,6 @@ export default function App() {
   const inp2 = `${inp} resize-none`;
 
   const RED    = '#e32028';
-  const CREAM  = '#fdf6ee';
-  const BORDER = '#d1d5db';
 
   return (
     <div
@@ -140,9 +144,7 @@ export default function App() {
       }}
     >
 
-      {/* ════════════════════════════════
-          RIGHT SIDEBAR — fixed editor
-          ════════════════════════════════ */}
+      {/* Sidebar */}
       <aside
         style={{
           width: 420,
@@ -158,53 +160,23 @@ export default function App() {
           flexShrink: 0,
         }}
       >
-        {/* Sidebar Header */}
-        <div
-          style={{
-            padding: '24px 28px 20px',
-            borderBottom: '1px solid #f1f5f9',
-            backgroundColor: '#fff',
-          }}
-        >
+        <div style={{ padding: '24px 28px 20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
             <Settings size={22} color="#e32028" />
-            <span style={{ fontWeight: 700, fontSize: 18, color: '#0f172a', letterSpacing: '-0.01em' }}>المحرر الاحترافي</span>
+            <span style={{ fontWeight: 700, fontSize: 18, color: '#0f172a' }}>المحرر الاحترافي</span>
           </div>
-          <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>هنا يمكنك تخصيص محتوى البطاقة. استخدم Ctrl + − للرؤية الشاملة.</p>
+          <p style={{ fontSize: 13, color: '#64748b' }}>خصص محتوى البطاقة واختر الثيم المناسب.</p>
         </div>
 
-        {/* Download button */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6' }}>
-          <button
-            onClick={handleDownload}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              backgroundColor: RED,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 12,
-              padding: '14px 0',
-              fontWeight: 700,
-              fontSize: 16,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <Download size={16} />
-            تحميل الصورة (2×)
+          <button onClick={handleDownload} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: RED, color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+            <Download size={16} /> تحميل الصورة (2×)
           </button>
         </div>
 
-        {/* Fields scroll area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-
           <SideSection label="الترويسة">
             <SideField label="نص الشعار"       name="logoText"      value={data.logoText}      onChange={handleChange} cls={inp} />
-            <SideField label="نص فاكت شيت"     name="factsheetText" value={data.factsheetText} onChange={handleChange} cls={inp} />
             <SideField label="شعار (سلوجن)"    name="slogan"        value={data.slogan}        onChange={handleChange} cls={inp} />
           </SideSection>
 
@@ -215,25 +187,33 @@ export default function App() {
                   key={id}
                   onClick={() => setData({ ...data, theme: id })}
                   style={{
-                    padding: '12px 8px',
-                    border: data.theme === id ? `2px solid ${t.main}` : '1px solid #e2e8f0',
-                    borderRadius: 12,
-                    backgroundColor: t.bg,
-                    color: t.text,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    textAlign: 'center',
-                    boxShadow: data.theme === id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-                    position: 'relative'
+                    padding: '12px 8px', border: data.theme === id ? `2px solid ${t.main}` : '1px solid #e2e8f0', borderRadius: 12, backgroundColor: t.bg, color: t.text, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center', position: 'relative'
                   }}
                 >
                   <div style={{ height: 6, width: 24, backgroundColor: t.main, borderRadius: 3, margin: '0 auto 6px' }} />
                   {t.name}
-                  {data.theme === id && (
-                    <div style={{ position: 'absolute', top: -4, right: -4, backgroundColor: t.main, color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
-                  )}
+                  {data.theme === id && <div style={{ position: 'absolute', top: -4, right: -4, backgroundColor: t.main, color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>}
+                </button>
+              ))}
+            </div>
+          </SideSection>
+
+          <SideSection label="اختيار الشعار">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <button
+                onClick={() => setData({ ...data, selectedLogo: '' })}
+                style={{ padding: 8, border: !data.selectedLogo ? `3px solid ${RED}` : '1px solid #e2e8f0', borderRadius: 12, backgroundColor: '#fff', cursor: 'pointer', position: 'relative', minHeight: 60 }}
+              >
+                <div style={{ fontSize: 10, fontWeight: 800 }}>LOGO</div>
+                <span style={{ fontSize: 10, color: '#64748b' }}>افتراضي</span>
+              </button>
+              {[1, 2, 3, 4].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setData({ ...data, selectedLogo: `/logooo/logo-${num}.png` })}
+                  style={{ padding: 8, border: data.selectedLogo === `/logooo/logo-${num}.png` ? `3px solid ${RED}` : '1px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', position: 'relative', minHeight: 60 }}
+                >
+                  <img src={`/logooo/logo-${num}.png`} alt={`Logo ${num}`} style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
                 </button>
               ))}
             </div>
@@ -253,316 +233,131 @@ export default function App() {
             </div>
           </SideSection>
 
-          <SideSection label="اختيار الشعار">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              <button
-                onClick={() => setData({ ...data, selectedLogo: '' })}
-                style={{
-                  padding: 8,
-                  border: !data.selectedLogo ? `3px solid ${RED}` : '1px solid #e2e8f0',
-                  borderRadius: 12,
-                  backgroundColor: !data.selectedLogo ? '#fff5f5' : '#fff',
-                  transition: 'all 0.2s',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 60,
-                  position: 'relative',
-                }}
-              >
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#1a2e1a', border: '1px solid #1a2e1a', padding: '2px 4px', borderRadius: 4 }}>{data.logoText}</div>
-                <span style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>افتراضي</span>
-                {!data.selectedLogo && (
-                  <div style={{ position: 'absolute', top: -5, right: -5, backgroundColor: RED, color: 'white', borderRadius: '50%', width: 20, height: 20, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
-                )}
-              </button>
-              {[1, 2, 3, 4].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => setData({ ...data, selectedLogo: `/logooo/logo-${num}.png` })}
-                  style={{
-                    padding: 8,
-                    border: data.selectedLogo === `/logooo/logo-${num}.png` ? `3px solid ${RED}` : '1px solid #e2e8f0',
-                    borderRadius: 12,
-                    backgroundColor: data.selectedLogo === `/logooo/logo-${num}.png` ? '#fff5f5' : '#fff',
-                    transition: 'all 0.2s',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: 60,
-                    position: 'relative',
-                  }}
-                  title={`Logo ${num}`}
-                >
-                  <img src={`/logooo/logo-${num}.png`} alt={`Logo ${num}`} style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
-                  {data.selectedLogo === `/logooo/logo-${num}.png` && (
-                    <div style={{ position: 'absolute', top: -5, right: -5, backgroundColor: RED, color: 'white', borderRadius: '50%', width: 20, height: 20, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </SideSection>
-
+          <SideSection label="التفاصيل">
+            <SideTextArea label="أبرز المستثمرين" name="keyInvestors"       value={data.keyInvestors}       rows={2} onChange={handleChange} cls={inp2} />
+            <SideTextArea label="المؤسسون"         name="founders"           value={data.founders}           rows={3} onChange={handleChange} cls={inp2} />
             <SideTextArea label="أبرز المنافسين"  name="primaryCompetition" value={data.primaryCompetition} rows={2} onChange={handleChange} cls={inp2} />
           </SideSection>
-
         </div>
       </aside>
 
-      {/* ════════════════════════════════
-          MAIN CANVAS AREA — scrollable
-          ════════════════════════════════ */}
-      <main
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'auto',
-          /* dynamic grid background matching theme */
-          backgroundImage: `radial-gradient(circle, ${currentTheme.dotColor} 1px, transparent 1px)`,
-          backgroundSize: '32px 32px',
-          backgroundColor: '#f8fafc',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          padding: '80px 60px 120px',
-        }}
-      >
+      {/* Main Canvas Area */}
+      <main style={{ flex: 1, overflow: 'auto', backgroundImage: `radial-gradient(circle, ${currentTheme.dotColor} 1px, transparent 1px)`, backgroundSize: '32px 32px', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '80px 60px' }}>
+        <div ref={cardRef} dir="rtl" style={{ width: 1080, height: 1920, backgroundColor: currentTheme.bg, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          
+          {/* Background Effects */}
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: `radial-gradient(circle at 2px 2px, ${currentTheme.dotColor} 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 600, background: `linear-gradient(180deg, ${currentTheme.panel} 20%, ${currentTheme.bg} 100%)`, opacity: 0.8 }} />
 
-        {/* ════════════════════════════════
-            INSTAGRAM STORY CARD 1080×1920
-            ════════════════════════════════ */}
-        <div
-          ref={cardRef}
-          dir="rtl"
-          style={{
-            width: 1080,
-            minWidth: 1080,
-            height: 1920,
-            minHeight: 1920,
-            backgroundColor: currentTheme.bg,
-            fontFamily: "'IBM Plex Sans Arabic', 'Segoe UI', sans-serif",
-            boxShadow: '0 32px 80px rgba(0,0,0,0.22)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            flexShrink: 0,
-            borderRadius: 4,
-            position: 'relative',
-          }}
-        >
-          {/* Subtle background texture/pattern */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.1, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 600, background: `linear-gradient(180deg, ${currentTheme.panel} 0%, transparent 100%)`, opacity: 0.5, pointerEvents: 'none' }} />
+          <div style={{ height: 12, backgroundColor: currentTheme.main, position: 'relative', zIndex: 10 }} />
 
-          {/* ① TOP BORDER */}
-          <div style={{ height: 10, backgroundColor: currentTheme.main, flexShrink: 0, position: 'relative', zIndex: 2 }} />
-
-          {/* ② HEADER: Logo + Slogan */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '72px 72px 60px', flexShrink: 0, position: 'relative', zIndex: 2 }}>
-            {/* Logo Group */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div style={{ flexShrink: 0 }}>
-                {data.selectedLogo ? (
-                  <img 
-                    src={data.selectedLogo} 
-                    alt="Logo Icon" 
-                    style={{ height: 100, width: 'auto', objectFit: 'contain', filter: currentTheme.text === '#ffffff' ? 'brightness(0) invert(1)' : 'none' }} 
-                  />
-                ) : (
-                  <div style={{ width: 80, height: 80, color: currentTheme.main, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `3px solid ${currentTheme.main}`, borderRadius: 20 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                  </div>
-                )}
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '80px 72px 40px', position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              {data.selectedLogo ? (
+                <img src={data.selectedLogo} alt="Logo" style={{ height: 110, width: 'auto', filter: currentTheme.bg !== '#ffffff' ? 'brightness(0) invert(1)' : 'none' }} />
+              ) : (
+                <div style={{ width: 90, height: 90, border: `4px solid ${currentTheme.main}`, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: currentTheme.main, fontSize: 32, fontWeight: 900 }}>{data.logoText[0]}</div>
+              )}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 56, fontWeight: 900, color: currentTheme.text, lineHeight: 1 }}>{data.logoText}</div>
+                <div style={{ fontSize: 30, fontWeight: 700, color: currentTheme.textSec, marginTop: 8 }}>{data.slogan}</div>
               </div>
+            </div>
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                <div style={{ fontSize: 56, fontWeight: 900, color: currentTheme.text, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>
-                  {data.logoText}
+          {/* Hero Section */}
+          <div style={{ padding: '60px 72px', position: 'relative', zIndex: 10 }}>
+             <div style={{ display: 'flex', gap: 40 }}>
+                <div style={{ width: 12, backgroundColor: currentTheme.main, borderRadius: 6 }} />
+                <div>
+                   <h1 style={{ fontSize: 154, fontWeight: 900, color: currentTheme.main, lineHeight: 0.9, margin: 0 }}>{data.startupName}</h1>
+                   <p style={{ fontSize: 42, color: currentTheme.textSec, marginTop: 24, fontWeight: 500 }}>{data.description}</p>
                 </div>
-                {data.slogan && (
-                  <div style={{ fontSize: 30, fontWeight: 700, color: currentTheme.textSec, marginTop: 6, whiteSpace: 'nowrap', textAlign: 'right' }}>
-                    {data.slogan}
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <h2 style={{ fontSize: 100, fontWeight: 900, color: currentTheme.main, fontStyle: 'italic', margin: 0 }}>{data.factsheetText}</h2>
+             </div>
           </div>
 
-          <div style={{ height: 3, backgroundColor: currentTheme.main, margin: '0 72px', flexShrink: 0, opacity: 0.3 }} />
+          <div style={{ height: 2, backgroundColor: currentTheme.border, margin: '0 72px', opacity: 0.3 }} />
 
-          {/* ③ COMPANY NAME + DESCRIPTION */}
-          <div style={{ padding: '72px 72px 64px', flexShrink: 0, position: 'relative', zIndex: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'stretch', gap: 0 }}>
-              <div style={{ width: 10, backgroundColor: currentTheme.main, borderRadius: 4, flexShrink: 0, marginLeft: 40 }} />
-              <div>
-                <h1 style={{ fontSize: 148, fontWeight: 900, color: currentTheme.main, lineHeight: 0.95, margin: 0 }}>{data.startupName}</h1>
-                <p style={{ fontSize: 38, color: currentTheme.textSec, fontWeight: 500, marginTop: 32, lineHeight: 1.4 }}>{data.description}</p>
-              </div>
-            </div>
+          {/* Metrics */}
+          <div style={{ padding: '40px 72px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, position: 'relative', zIndex: 10 }}>
+            <MetricCell label="حجم التمويل" value={data.fundingAmount} fs={84} border="left" theme={currentTheme} />
+            <MetricCell label="سنة التأسيس" value={data.foundedIn} fs={84} border="none" theme={currentTheme} />
+            <MetricCell label="المقر الرئيسي" value={data.headquarters} fs={72} border="left" theme={currentTheme} />
+            <MetricCell label="القطاع" value={data.sector} fs={72} border="none" theme={currentTheme} />
           </div>
 
-          <div style={{ height: 2, backgroundColor: currentTheme.border, margin: '0 72px', flexShrink: 0, opacity: 0.2 }} />
-
-          {/* ④ METRICS GRID */}
-          <div style={{ margin: '0 72px', flexShrink: 0, position: 'relative', zIndex: 2 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `2px solid ${currentTheme.border}` }}>
-              <MetricCell label="حجم التمويل" value={data.fundingAmount} fs={80} border="left" theme={currentTheme} />
-              <MetricCell label="سنة التأسيس" value={data.foundedIn}    fs={90} border="none" theme={currentTheme} />
+          {/* Details Panel */}
+          <div style={{ flex: 1, backgroundColor: currentTheme.panel, margin: '40px 0 0', padding: '80px 72px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, position: 'relative', zIndex: 10 }}>
+            <div style={{ borderLeft: `2px solid ${currentTheme.border}`, paddingLeft: 60 }}>
+              <InfoBox label="أبرز المستثمرين" value={data.keyInvestors} theme={currentTheme} />
+              <div style={{ marginTop: 80 }}>
+                <InfoBox label="أبرز المنافسين" value={data.primaryCompetition} theme={currentTheme} />
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-              <MetricCell label="المقر الرئيسي" value={data.headquarters} fs={72} border="left" theme={currentTheme} />
-              <MetricCell label="القطاع"         value={data.sector}      fs={68} border="none" theme={currentTheme} />
+            <div>
+              <InfoBox label="المؤسسون" value={data.founders} theme={currentTheme} />
             </div>
           </div>
 
-          {/* ⑤ BOTTOM PANEL */}
-          <div style={{ flex: 1, backgroundColor: currentTheme.panel, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 2 }}>
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '80px 72px 60px', gap: 0 }}>
-              <div style={{ paddingLeft: 52, borderLeft: `2px solid ${currentTheme.border}` }}>
-                <InfoBox label="أبرز المستثمرين" value={data.keyInvestors} theme={currentTheme} />
-                <div style={{ marginTop: 80 }}>
-                  <InfoBox label="أبرز المنافسين" value={data.primaryCompetition} theme={currentTheme} />
-                </div>
-              </div>
-              <div style={{ paddingRight: 52 }}>
-                <InfoBox label="المؤسسون" value={data.founders} theme={currentTheme} />
-              </div>
-            </div>
-
-            {/* ⑥ FOOTER */}
-            <div style={{ padding: '32px 72px 48px', borderTop: `1px solid ${currentTheme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: currentTheme.footerBg }}>
-              <div style={{ fontSize: 24, fontWeight: 800, color: currentTheme.text, fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>منصة المستثمر الاقتصادية</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: currentTheme.text, letterSpacing: '-0.02em', fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>al-investor.com</div>
-            </div>
-          </div>
- Name */}
-              <div 
-                className="footer-platform"
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 16,
-                  fontSize: 24, 
-                  fontWeight: 800, 
-                  color: '#1e293b',
-                  fontFamily: "'IBM Plex Sans Arabic', sans-serif"
-                }}
-              >
-                <span>منصة المستثمر الاقتصادية</span>
-              </div>
-
-              {/* Left Side: Domain */}
-              <div 
-                className="footer-domain"
-                style={{ 
-                  fontSize: 24, 
-                  fontWeight: 800, 
-                  color: '#1e293b', 
-                  letterSpacing: '-0.02em',
-                  fontFamily: "'IBM Plex Sans Arabic', sans-serif"
-                }}
-              >
-                al-investor.com
-              </div>
-            </div>
+          {/* Footer */}
+          <div style={{ padding: '48px 72px 64px', backgroundColor: currentTheme.footerBg, borderTop: `1px solid ${currentTheme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+            <div style={{ fontSize: 26, fontWeight: 900, color: currentTheme.text }}>منصة المستثمر الاقتصادية</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: currentTheme.text }}>al-investor.com</div>
           </div>
 
         </div>
-        {/* ════ END CARD ════ */}
-
       </main>
     </div>
   );
 }
 
-/* ─────────────────── helpers ─────────────────── */
+/* ─────────────────── Helpers ─────────────────── */
 
-function MetricCell({ label, value, fs, border, theme }: { label: string; value: string; fs: number; border: 'left' | 'none'; theme: any }) {
+function MetricCell({ label, value, fs, border, theme }: any) {
   return (
-    <div style={{
-      padding: '64px 52px 64px 0',
-      ...(border === 'left' ? { borderLeft: `2px solid ${theme.border}`, paddingLeft: 52, paddingRight: 0 } : { paddingRight: 52 }),
-    }}>
-      <p style={{ fontSize: 24, color: theme.textSec, fontWeight: 600, marginBottom: 14, letterSpacing: '0.06em' }}>
-        {label}
-      </p>
-      <div style={{ 
-        fontSize: fs, 
-        fontWeight: 900, 
-        color: theme.main, 
-        lineHeight: 1.1, 
-        letterSpacing: '-0.01em', 
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }}>
-        {value}
-      </div>
+    <div style={{ padding: '40px 0', borderLeft: border === 'left' ? `2px solid ${theme.border}` : 'none', paddingLeft: border === 'left' ? 40 : 0, paddingRight: border === 'left' ? 0 : 40 }}>
+      <div style={{ fontSize: 24, fontWeight: 700, color: theme.textSec, marginBottom: 12 }}>{label}</div>
+      <div style={{ fontSize: fs, fontWeight: 900, color: theme.main, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
 
-function InfoBox({ label, value, theme }: { label: string; value: string; theme: any }) {
+function InfoBox({ label, value, theme }: any) {
   return (
-    <div>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        border: `1.5px solid ${theme.accent}`, borderRadius: 6, padding: '14px 20px',
-        marginBottom: 18, backgroundColor: theme.bg,
-      }}>
-        <span style={{ fontSize: 26, fontWeight: 900, color: theme.accent, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          {label}
-        </span>
-        <span style={{ width: 16, height: 16, backgroundColor: theme.accent, display: 'inline-block', transform: 'rotate(45deg)', flexShrink: 0 }} />
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ width: 12, height: 12, backgroundColor: theme.accent, transform: 'rotate(45deg)' }} />
+        <div style={{ fontSize: 28, fontWeight: 900, color: theme.accent, textTransform: 'uppercase' }}>{label}</div>
       </div>
-      <p style={{ fontSize: 32, color: theme.text, fontWeight: 500, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-        {value}
-      </p>
+      <div style={{ fontSize: 34, color: theme.text, fontWeight: 500, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{value}</div>
     </div>
   );
 }
 
-function SideSection({ label, children }: { label: string; children: React.ReactNode }) {
+function SideSection({ label, children }: any) {
   return (
     <div style={{ marginBottom: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
-        {label}
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {children}
-      </div>
-      <div style={{ height: 1, backgroundColor: '#f3f4f6', marginTop: 16 }} />
+      <div style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 16 }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
     </div>
   );
 }
 
-function SideField({ label, name, value, onChange, cls }: {
-  label: string; name: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; cls: string;
-}) {
+function SideField({ label, name, value, onChange, cls }: any) {
   return (
-    <div>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>{label}</label>
-      <input type="text" name={name} value={value} onChange={onChange} className={cls} />
-    </div>
+     <div>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#4b5563', marginBottom: 6 }}>{label}</label>
+        <input type="text" name={name} value={value} onChange={onChange} className={cls} />
+     </div>
   );
 }
 
-function SideTextArea({ label, name, value, onChange, rows, cls }: {
-  label: string; name: string; value: string; rows: number;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; cls: string;
-}) {
+function SideTextArea({ label, name, value, onChange, rows, cls }: any) {
   return (
-    <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b7280', marginBottom: 4 }}>{label}</label>
-      <textarea name={name} value={value} onChange={onChange} rows={rows} className={cls} />
-    </div>
+     <div>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#4b5563', marginBottom: 6 }}>{label}</label>
+        <textarea name={name} value={value} onChange={onChange} rows={rows} className={cls} />
+     </div>
   );
 }
