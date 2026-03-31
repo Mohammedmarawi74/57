@@ -19,85 +19,75 @@ export default function App() {
     footerNumber: '42',
     selectedLogo: '/logooo/logo-1.png', // Default logo
     slogan: 'في رحلة لتطوير الاقتصاد العربي',
-    theme: 'white', // Default theme
+    theme: 'navyLight', // Updated default theme
   });
 
   const THEMES = {
+    // --- 4 New Navy Day Variations ---
+    navyLight: {
+      name: 'كحلي كلاسيك (نهاري)',
+      main: '#1e3a8a', mainText: '#1e3a8a', text: '#0f172a', textSec: '#475569',
+      bg: '#ffffff', panel: '#f8fafc', border: '#e2e8f0', accent: '#1e3a8a', footerBg: '#f8fafc', dotColor: '#cbd5e1',
+      isDark: false
+    },
+    navySky: {
+      name: 'كحلي سماوي (نهاري)',
+      main: '#0369a1', mainText: '#0369a1', text: '#0c4a6e', textSec: '#334155',
+      bg: '#f0f9ff', panel: '#e0f2fe', border: '#bae6fd', accent: '#0ea5e9', footerBg: '#e0f2fe', dotColor: '#bae6fd',
+      isDark: false
+    },
+    navyGold: {
+      name: 'كحلي وذهبي (فاخر)',
+      main: '#1e1b4b', mainText: '#1e1b4b', text: '#1e1b4b', textSec: '#475569',
+      bg: '#ffffff', panel: '#fffcf0', border: '#fde68a', accent: '#b45309', footerBg: '#fffcf0', dotColor: '#e5e7eb',
+      isDark: false
+    },
+    navyMinimal: {
+      name: 'كحلي مينيمال (بسيط)',
+      main: '#1e293b', mainText: '#1e293b', text: '#1e293b', textSec: '#64748b',
+      bg: '#ffffff', panel: '#f1f5f9', border: '#cbd5e1', accent: '#1e293b', footerBg: '#f1f5f9', dotColor: '#e2e8f0',
+      isDark: false
+    },
+    // --- Old Professional Themes (Restored) ---
     white: {
       name: 'الأبيض النقي',
-      main: '#e32028',
-      text: '#111827',
-      textSec: '#4b5563',
-      bg: '#ffffff',
-      panel: '#fdf6ee', // cream
-      border: '#d1d5db',
-      accent: '#e32028',
-      footerBg: '#fdf6ee',
-      dotColor: '#cbd5e1'
+      main: '#e32028', mainText: '#e32028', text: '#111827', textSec: '#4b5563',
+      bg: '#ffffff', panel: '#fdf6ee', border: '#d1d5db', accent: '#e32028', footerBg: '#fdf6ee', dotColor: '#cbd5e1',
+      isDark: false
     },
-    navy: {
-      name: 'الكحلي الملكي',
-      main: '#38bdf8', // Blue accent
-      text: '#f8fafc',
-      textSec: '#94a3b8',
-      bg: '#0f172a',
-      panel: '#1e293b',
-      border: '#334155',
-      accent: '#38bdf8',
-      footerBg: '#1e293b',
-      dotColor: '#334155'
+    navyDark: {
+      name: 'الكحلي الملكي (ليل)',
+      main: '#38bdf8', mainText: '#38bdf8', text: '#f8fafc', textSec: '#94a3b8',
+      bg: '#0f172a', panel: '#1e293b', border: '#334155', accent: '#38bdf8', footerBg: '#1e293b', dotColor: '#334155',
+      isDark: true
     },
-    emerald: {
-      name: 'الأخضر الفاخر',
-      main: '#10b981',
-      text: '#f0fdf4',
-      textSec: '#6dbd9f',
-      bg: '#064e3b',
-      panel: '#065f46',
-      border: '#047857',
-      accent: '#10b981',
-      footerBg: '#065f46',
-      dotColor: '#047857'
+    emeraldDark: {
+      name: 'الأخضر الفاخر (ليل)',
+      main: '#10b981', mainText: '#10b981', text: '#f0fdf4', textSec: '#6dbd9f',
+      bg: '#064e3b', panel: '#065f46', border: '#047857', accent: '#10b981', footerBg: '#065f46', dotColor: '#047857',
+      isDark: true
     },
-    slate: {
-      name: 'الرمادي العصري',
-      main: '#f43f5e',
-      text: '#f8fafc',
-      textSec: '#94a3b8',
-      bg: '#1e293b',
-      panel: '#334155',
-      border: '#475569',
-      accent: '#f43f5e',
-      footerBg: '#334155',
-      dotColor: '#475569'
+    slateDark: {
+      name: 'الرمادي العصري (ليل)',
+      main: '#f43f5e', mainText: '#f43f5e', text: '#f8fafc', textSec: '#94a3b8',
+      bg: '#1e293b', panel: '#334155', border: '#475569', accent: '#f43f5e', footerBg: '#334155', dotColor: '#475569',
+      isDark: true
     },
-    crimson: {
-      name: 'الأحمر العميق',
-      main: '#ffffff',
-      text: '#ffffff',
-      textSec: '#fecaca',
-      bg: '#7f1d1d',
-      panel: '#991b1b',
-      border: '#b91c1c',
-      accent: '#ffffff',
-      footerBg: '#991b1b',
-      dotColor: '#dc2626'
+    crimsonDark: {
+      name: 'الأحمر العميق (ليل)',
+      main: '#ffffff', mainText: '#ffffff', text: '#ffffff', textSec: '#fecaca',
+      bg: '#7f1d1d', panel: '#991b1b', border: '#b91c1c', accent: '#ffffff', footerBg: '#991b1b', dotColor: '#dc2626',
+      isDark: true
     },
     coffee: {
       name: 'القهوة الدافئة',
-      main: '#d97706',
-      text: '#451a03',
-      textSec: '#92400e',
-      bg: '#fff7ed',
-      panel: '#ffedd5',
-      border: '#fed7aa',
-      accent: '#d97706',
-      footerBg: '#ffedd5',
-      dotColor: '#fdba74'
+      main: '#d97706', mainText: '#d97706', text: '#451a03', textSec: '#92400e',
+      bg: '#fff7ed', panel: '#ffedd5', border: '#fed7aa', accent: '#d97706', footerBg: '#ffedd5', dotColor: '#fdba74',
+      isDark: false
     }
   };
 
-  const currentTheme = THEMES[data.theme as keyof typeof THEMES] || THEMES.white;
+  const currentTheme = THEMES[data.theme as keyof typeof THEMES] || THEMES.navyLight;
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -255,7 +245,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', padding: '80px 72px 40px', position: 'relative', zIndex: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               {data.selectedLogo ? (
-                <img src={data.selectedLogo} alt="Logo" style={{ height: 110, width: 'auto', filter: currentTheme.bg !== '#ffffff' ? 'brightness(0) invert(1)' : 'none' }} />
+                <img src={data.selectedLogo} alt="Logo" style={{ height: 110, width: 'auto', filter: currentTheme.isDark ? 'brightness(0) invert(1)' : 'none' }} />
               ) : (
                 <div style={{ width: 90, height: 90, border: `4px solid ${currentTheme.main}`, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: currentTheme.main, fontSize: 32, fontWeight: 900 }}>{data.logoText[0]}</div>
               )}
